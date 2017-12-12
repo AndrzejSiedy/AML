@@ -132,7 +132,7 @@ namespace AML.Twitter.Service
                 {
                     // call Twitter service
                     _harvesterRecords.AddRange(addedRecs);
-                    TwitterPublish($"Msg from AML, there has been an update on the list recs updated: {addedRecs.Count}");
+                    TwitterPublish($"Msg from AML, there has been an update on the sanctioned list. Number of updates: {addedRecs.Count}");
                 }
             }
             catch(Exception e)
