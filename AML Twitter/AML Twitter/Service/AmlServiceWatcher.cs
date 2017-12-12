@@ -1,8 +1,7 @@
-﻿using Microsoft.Extensions.Options;
+﻿using AML.Twitter.Models;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -13,67 +12,6 @@ using System.Threading.Tasks;
 
 namespace AML.Twitter.Service
 {
-
-    public class ODataResponse<T>
-    {
-        public ODataResponse()
-        {
-            Value = new List<T>();
-        }
-        public List<T> Value { get; set; }
-    }
-
-
-    public class ODataSuperBase
-    {
-        public int PrimaryKey { get; set; }
-    }
-
-    public class ODataListBase: ODataSuperBase
-    {
-        public bool IsPublished { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime ModifiedAt { get; set; }
-        public string Status { get; set; }
-        public Guid CreatedById { get; set; }
-        public Guid ModifiedById { get; set; }
-        public string Revision { get; set; }
-        
-    }
-
-    public class ODataList: ODataListBase
-    {
-        public string Name {get;set;}
-        public int LookupSourceId { get; set; }
-        public string LookupSourceName { get; set; }
-        public string ShortCode { get; set; }
-        
-    }
-
-    public class ODataListVersion: ODataListBase
-    {
-        public int ListId { get; set; }
-        public string VersionRef { get; set; }
-        public int? PreviousListVersionId { get; set; }
-        public int? NextListVersionId { get; set; }
-        public int Added { get; set; }
-        public int Modified { get; set; }
-        public int Removed { get; set; }
-        public int TotalNumberOfRecords { get; set; }
-        public int WatchListPollId { get; set; }
-        public DateTime ContextDate { get; set; }
-        public bool IsSATGenerated { get; set; }
-    }
-
-    public class HarvesrerRecord: ODataSuperBase
-    {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string HarvesterRecordChangeType { get; set; }
-        public string SourceReference { get; set; }
-        public string Details { get; set; }
-        public string DataType { get; set; }
-    }
 
     public class AmlServiceWatcher : IAmlServiceWatcher
     {
