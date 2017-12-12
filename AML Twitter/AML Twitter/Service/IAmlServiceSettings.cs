@@ -1,4 +1,4 @@
-﻿namespace AML.Twitter
+﻿namespace AML.Twitter.Service
 {
     public interface IAmlServiceSettings
     {

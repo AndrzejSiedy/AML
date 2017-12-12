@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AML.Twitter
+namespace AML.Twitter.Service
 {
     public class AmlServiceSettings : IAmlServiceSettings
     {
