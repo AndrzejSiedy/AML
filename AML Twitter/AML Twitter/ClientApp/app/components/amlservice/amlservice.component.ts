@@ -7,7 +7,6 @@ import { Headers, RequestOptions  } from '@angular/http';
     templateUrl: './amlservice.component.html'
 })
 export class AmlServiceComponent {
-    public forecasts: WeatherForecast[];
 
     baseUrl: string;
     http: Http;
@@ -49,14 +48,3 @@ export class AmlServiceComponent {
 
 }
 
-interface WeatherForecast {
-    dateFormatted: string;
-    temperatureC: number;
-    temperatureF: number;
-    summary: string;
-}
-
-
-//http.get(this.baseUrl + 'api/SampleData/WeatherForecasts').subscribe(result => {
-//    this.forecasts = result.json() as WeatherForecast[];
-//}, error => console.error(error));

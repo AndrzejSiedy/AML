@@ -1,6 +1,5 @@
 <h1>Here you can Start/Stop AML Service</h1>
 
-<p>This component demonstrates fetching data from the server.</p>
 <span>is service started: {{serviceStarted}}</span>
 
 <div>
@@ -8,21 +7,3 @@
     <button class="btn btn-warning" (click)="stopAmlService()"  [disabled]="!serviceStarted">Stop AML Service</button>
 </div>
 
-<table class='table' *ngIf="forecasts">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Temp. (C)</th>
-            <th>Temp. (F)</th>
-            <th>Summary</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let forecast of forecasts">
-            <td>{{ forecast.dateFormatted }}</td>
-            <td>{{ forecast.temperatureC }}</td>
-            <td>{{ forecast.temperatureF }}</td>
-            <td>{{ forecast.summary }}</td>
-        </tr>
-    </tbody>
-</table>
