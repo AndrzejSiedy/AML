@@ -11,19 +11,13 @@ namespace AML.Twitter.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly IAmlServiceWatcher _amlServiceWatcher;
-        public HomeController(IAmlServiceWatcher amlServiceWatcher)
+
+        public HomeController()
         {
-            _amlServiceWatcher = amlServiceWatcher;
         }
 
         public IActionResult Index()
         {
-
-            Task.Run(async () => {
-                await _amlServiceWatcher.CallService();
-            });
-
             return View();
         }
 

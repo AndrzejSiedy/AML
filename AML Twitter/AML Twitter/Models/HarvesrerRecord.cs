@@ -1,6 +1,6 @@
 ﻿namespace AML.Twitter.Models
 {
-    public class HarvesrerRecord: ODataSuperBase
+    public class HarvesterRecord: ODataSuperBase
     {
         public string Name { get; set; }
         public string Description { get; set; }

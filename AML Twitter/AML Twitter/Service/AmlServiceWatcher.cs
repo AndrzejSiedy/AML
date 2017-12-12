@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -21,13 +22,52 @@ namespace AML.Twitter.Service
         private static HttpClient client = new HttpClient();
 
 
+        /// <summary>
+        /// state to monitor if service is running
+        /// </summary>
         private bool _isRunning = false;
 
+        /// <summary>
+        /// when set to true, will stop calling AmlService
+        /// </summary>
+        private bool _shouldStopService = false;
+
+        /// <summary>
+        /// read only property to check if service is running (actually is marked as running)
+        /// </summary>
         public bool IsRunning { get => _isRunning; }
+
+        /// <summary>
+        /// List conataing all records from last call for change discovery
+        /// </summary>
+        public List<HarvesterRecord> HarvesterRecords { get; set; }
 
         public AmlServiceWatcher(IOptions<AmlServiceSettings> amlServiceSettings)
         {
             _amlServiceSettings = amlServiceSettings;
+            HarvesterRecords = new List<HarvesterRecord>();
+        }
+
+        /// <summary>
+        /// Start AmlService if not running
+        /// </summary>
+        /// <returns></returns>
+        public async Task StartServiceAsync() {
+            _shouldStopService = false;
+            await CallService();
+        }
+
+
+        /// <summary>
+        /// Disable service
+        /// </summary>
+        /// <returns></returns>
+        public async Task StopServiceAsync()
+        {
+            await Task.Run(() => {
+                _shouldStopService = true;
+            });
+            
         }
 
         /// <summary>
@@ -37,7 +77,7 @@ namespace AML.Twitter.Service
         private async Task _CallService()
         {
             var listVersion = await CallOData<ODataListVersion>(_amlServiceSettings.Value.AmlListVersionUrl);
-            var harvestData = await CallOData<HarvesrerRecord>(string.Format(_amlServiceSettings.Value.AmlHarvesterUrl, 17681));
+            var harvestData = await CallOData<HarvesterRecord>(string.Format(_amlServiceSettings.Value.AmlHarvesterUrl, 17681));
 
             // self call to get latest from services and if required do Twitter notification
             await Task.Delay(_amlServiceSettings.Value.ServiceCallInterval).ContinueWith(async _ => {
@@ -49,8 +89,11 @@ namespace AML.Twitter.Service
         /// Just initiates service call and Twitter notification if not running already
         /// </summary>
         /// <returns></returns>
-        public async Task CallService()
+        private async Task CallService()
         {
+            // prevent next call to AmlServices
+            if (_shouldStopService) return;
+
             // if process already running, do nothing
             if (_isRunning) return;
 
@@ -58,12 +101,16 @@ namespace AML.Twitter.Service
             await _CallService();
         }
         
+
         // Semi generic method to call OData Services
         private async Task<ODataResponse<T>> CallOData<T>(string endUrl) where T: ODataSuperBase
         {
 
             string jsonString = string.Empty;
             var output = new ODataResponse<T>();
+
+            // do not call services if marked as "should stop exeqution", http request already called will not get killed
+            if (_shouldStopService) return output;
 
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, _amlServiceSettings.Value.AmlBaseUrl + endUrl);
             await client.SendAsync(request)
