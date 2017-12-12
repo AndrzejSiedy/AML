@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using Tweetinvi;
 
 namespace AML.Twitter.Service
 {
@@ -44,6 +45,7 @@ namespace AML.Twitter.Service
     {
 
         private readonly IOptions<AmlServiceSettings> _amlServiceSettings;
+        private readonly IOptions<AmlTwitterConfig> _amlTwitterConfig;
 
         private static HttpClient client = new HttpClient();
 
@@ -69,9 +71,10 @@ namespace AML.Twitter.Service
         /// </summary>
         private List<HarvesterRecord> _harvesterRecords { get; set; }
 
-        public AmlServiceWatcher(IOptions<AmlServiceSettings> amlServiceSettings)
+        public AmlServiceWatcher(IOptions<AmlServiceSettings> amlServiceSetting, IOptions<AmlTwitterConfig> amlTwitterConfig)
         {
-            _amlServiceSettings = amlServiceSettings;
+            _amlServiceSettings = amlServiceSetting;
+            _amlTwitterConfig = amlTwitterConfig;
             _harvesterRecords = new List<HarvesterRecord>();
         }
 
@@ -103,6 +106,13 @@ namespace AML.Twitter.Service
             return;
         }
 
+        private void TwitterPublish(string msg)
+        {
+            Auth.SetUserCredentials(_amlTwitterConfig.Value.ConsumerKey, _amlTwitterConfig.Value.ConsumerSecret,
+                _amlTwitterConfig.Value.AccessToken, _amlTwitterConfig.Value.AccessTokenSecret);
+            var user = User.GetAuthenticatedUser();
+            Tweet.PublishTweet(msg);
+        }
 
         private void AddNewRecordsAndCallPolice(List<HarvesterRecord> recs)
         {
@@ -122,6 +132,7 @@ namespace AML.Twitter.Service
                 {
                     // call Twitter service
                     _harvesterRecords.AddRange(addedRecs);
+                    TwitterPublish($"Msg from AML, there has been an update on the list recs updated: {addedRecs.Count}");
                 }
             }
             catch(Exception e)

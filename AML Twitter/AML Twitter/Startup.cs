@@ -28,6 +28,7 @@ namespace AML.Twitter
             services.AddOptions();
 
             services.Configure<AmlServiceSettings>(options => Configuration.GetSection("AmlServicesSettings").Bind(options));
+            services.Configure<AmlTwitterConfig>(options => Configuration.GetSection("TwitterConfig").Bind(options));
 
             // use singleton to run one instance of service
             // TODO: make AmlServiceWatcher to utilize Threads
