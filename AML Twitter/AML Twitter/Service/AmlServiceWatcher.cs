@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -14,6 +15,31 @@ using System.Threading.Tasks;
 namespace AML.Twitter.Service
 {
 
+    class HarvesterRecordsComparer : IEqualityComparer<HarvesterRecord>
+    {
+
+        public bool Equals(HarvesterRecord c1, HarvesterRecord c2)
+        {
+            if (c1.PrimaryKey == c2.PrimaryKey && c1.HarvesterRecordChangeType == c2.HarvesterRecordChangeType)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public int GetHashCode(HarvesterRecord c)
+        {
+            return c.PrimaryKey.GetHashCode();
+        }
+    }
+
+    /// <summary>
+    /// Class to call AML service and monitor changes, when call Twitter service to publish changes to Twitter
+    /// in Startup.cs class instantiated  as singleton, but should be converted to utilize threads, or run as system service, out of scope of this exercise
+    /// </summary>
     public class AmlServiceWatcher : IAmlServiceWatcher
     {
 
@@ -38,14 +64,15 @@ namespace AML.Twitter.Service
         public bool IsRunning { get => _isRunning; }
 
         /// <summary>
-        /// List conataing all records from last call for change discovery
+        /// List containing all unique records since service run
+        /// this should be stored somewhere but for this excercise we only care if there are any changes, to notify on Twitter
         /// </summary>
-        public List<HarvesterRecord> HarvesterRecords { get; set; }
+        private List<HarvesterRecord> _harvesterRecords { get; set; }
 
         public AmlServiceWatcher(IOptions<AmlServiceSettings> amlServiceSettings)
         {
             _amlServiceSettings = amlServiceSettings;
-            HarvesterRecords = new List<HarvesterRecord>();
+            _harvesterRecords = new List<HarvesterRecord>();
         }
 
         /// <summary>
@@ -53,8 +80,12 @@ namespace AML.Twitter.Service
         /// </summary>
         /// <returns></returns>
         public async Task StartServiceAsync() {
+
+            _harvesterRecords.Clear();
             _shouldStopService = false;
-            await CallService();
+            await _CallService();
+
+            return;
         }
 
 
@@ -67,6 +98,36 @@ namespace AML.Twitter.Service
             await Task.Run(() => {
                 _shouldStopService = true;
             });
+
+            _harvesterRecords.Clear();
+            return;
+        }
+
+
+        private void AddNewRecordsAndCallPolice(List<HarvesterRecord> recs)
+        {
+            try
+            {
+                // add only missing records
+                var addedRecs = new List<HarvesterRecord>();
+                recs.ForEach(r =>
+                {
+                    if (!_harvesterRecords.Exists(h => h.PrimaryKey == r.PrimaryKey))
+                    {
+                        addedRecs.Add(r);
+                    }
+                });
+
+                if (addedRecs.Count > 0)
+                {
+                    // call Twitter service
+                    _harvesterRecords.AddRange(addedRecs);
+                }
+            }
+            catch(Exception e)
+            {
+
+            }
             
         }
 
@@ -76,31 +137,32 @@ namespace AML.Twitter.Service
         /// <returns></returns>
         private async Task _CallService()
         {
-            var listVersion = await CallOData<ODataListVersion>(_amlServiceSettings.Value.AmlListVersionUrl);
-            var harvestData = await CallOData<HarvesterRecord>(string.Format(_amlServiceSettings.Value.AmlHarvesterUrl, 17681));
+            if (_shouldStopService) {
+                _isRunning = false;
+                return;
+            };
 
+            _isRunning = true;
+            var listVersion = await CallOData<ODataListVersion>(_amlServiceSettings.Value.AmlListVersionUrl);
+
+            for(var i = 0; i < listVersion.Value.Count; i++)
+            {
+                var l = listVersion.Value[i];
+                var harvestResponse = await CallOData<HarvesterRecord>(string.Format(_amlServiceSettings.Value.AmlHarvesterUrl, l.PrimaryKey));
+                if (harvestResponse != null)
+                {
+                    AddNewRecordsAndCallPolice(harvestResponse.Value);
+                }
+            }
+            
             // self call to get latest from services and if required do Twitter notification
             await Task.Delay(_amlServiceSettings.Value.ServiceCallInterval).ContinueWith(async _ => {
                 await _CallService();
             });
+
+            return;
         }
 
-        /// <summary>
-        /// Just initiates service call and Twitter notification if not running already
-        /// </summary>
-        /// <returns></returns>
-        private async Task CallService()
-        {
-            // prevent next call to AmlServices
-            if (_shouldStopService) return;
-
-            // if process already running, do nothing
-            if (_isRunning) return;
-
-            _isRunning = true;
-            await _CallService();
-        }
-        
 
         // Semi generic method to call OData Services
         private async Task<ODataResponse<T>> CallOData<T>(string endUrl) where T: ODataSuperBase

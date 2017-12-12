@@ -1,5 +1,6 @@
 import { Component, Inject } from '@angular/core';
-import { Http } from '@angular/http';
+import { Http, Response } from '@angular/http';
+import { Headers, RequestOptions  } from '@angular/http';
 
 @Component({
     selector: 'amlservice',
@@ -8,17 +9,42 @@ import { Http } from '@angular/http';
 export class AmlServiceComponent {
     public forecasts: WeatherForecast[];
 
+    baseUrl: string;
+    http: Http;
+    headers: Headers;
+    options: RequestOptions;
+
+
+    public serviceStarted: boolean = false;
+
     constructor(http: Http, @Inject('BASE_URL') baseUrl: string) {
-        http.get(baseUrl + 'api/SampleData/WeatherForecasts').subscribe(result => {
-            this.forecasts = result.json() as WeatherForecast[];
-        }, error => console.error(error));
+
+        this.baseUrl = baseUrl;
+        this.http = http;
+
+        this.headers = new Headers({ 'Content-Type': 'application/json' });
+        this.options = new RequestOptions({ headers: this.headers });
+        
     }
 
     public startAmlService() {
         console.warn('call AML service to start');
+        this._callService('api/AmlService/StartAmlService', "start");
     }
+
     public stopAmlService() {
         console.warn('call AML service to stop');
+        this._callService('api/AmlService/StopAmlService', "stop");
+    }
+
+    _callService(url: string, method: string) {
+        return this.http.post(this.baseUrl + url, {}, this.options).subscribe(result => {
+            console.warn('called service', url);
+            console.warn('service response', result);
+
+            this.serviceStarted = method == "start";
+
+        }, error => console.error(error));
     }
 
 }
@@ -29,3 +55,8 @@ interface WeatherForecast {
     temperatureF: number;
     summary: string;
 }
+
+
+//http.get(this.baseUrl + 'api/SampleData/WeatherForecasts').subscribe(result => {
+//    this.forecasts = result.json() as WeatherForecast[];
+//}, error => console.error(error));

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AML.Twitter.Controllers
 {
+
     [Produces("application/json")]
     [Route("api/[controller]")]
     public class AmlServiceController : Controller
@@ -21,16 +22,21 @@ namespace AML.Twitter.Controllers
         }
 
         [HttpPost("[action]")]
-        public void StartAmlService() => Task.Run(async () =>
+        public IActionResult StartAmlService()
         {
-            await _amlServiceWatcher.StartServiceAsync();
-        });
-
+            // in this scenario we don't really check what is going on with services
+            // it is fire & forget for this implementation
+            _amlServiceWatcher.StartServiceAsync();
+            return Ok();
+        }
 
         [HttpPost("[action]")]
-        public void StopAmlService() => Task.Run(async () =>
+        public IActionResult StopAmlService()
         {
-            await _amlServiceWatcher.StopServiceAsync();
-        });
+            // in this scenario we don't really check what is going on with services
+            // it is fire & forget for this implementation
+            _amlServiceWatcher.StopServiceAsync();
+            return Ok();
+        }
     }
 }

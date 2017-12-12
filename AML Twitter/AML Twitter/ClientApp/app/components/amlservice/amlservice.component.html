@@ -1,12 +1,11 @@
 <h1>Here you can Start/Stop AML Service</h1>
 
 <p>This component demonstrates fetching data from the server.</p>
-
-<p *ngIf="!forecasts"><em>Loading...</em></p>
+<span>is service started: {{serviceStarted}}</span>
 
 <div>
-    <button  (click)="startAmlService()">Start AML Service</button>
-    <button (click)="stopAmlService()">Stop AML Service</button>
+    <button class="btn btn-success" (click)="startAmlService()" [disabled]="serviceStarted">Start AML Service</button>
+    <button class="btn btn-warning" (click)="stopAmlService()"  [disabled]="!serviceStarted">Stop AML Service</button>
 </div>
 
 <table class='table' *ngIf="forecasts">
