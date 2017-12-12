@@ -2,10 +2,10 @@ import { Component, Inject } from '@angular/core';
 import { Http } from '@angular/http';
 
 @Component({
-    selector: 'fetchdata',
-    templateUrl: './fetchdata.component.html'
+    selector: 'amlservice',
+    templateUrl: './amlservice.component.html'
 })
-export class FetchDataComponent {
+export class AmlServiceComponent {
     public forecasts: WeatherForecast[];
 
     constructor(http: Http, @Inject('BASE_URL') baseUrl: string) {
@@ -13,6 +13,14 @@ export class FetchDataComponent {
             this.forecasts = result.json() as WeatherForecast[];
         }, error => console.error(error));
     }
+
+    public startAmlService() {
+        console.warn('call AML service to start');
+    }
+    public stopAmlService() {
+        console.warn('call AML service to stop');
+    }
+
 }
 
 interface WeatherForecast {
